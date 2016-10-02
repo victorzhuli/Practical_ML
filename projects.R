@@ -25,7 +25,7 @@ dt_training <- dt_training[,c(features,"classe")]
 dt_testing <- dt_testing[,c(features,"problem_id")]
 
 # partitioning the data
-set.seed(12345)
+set.seed(88888)
 
 inTrain <- createDataPartition(dt_training$classe, p=0.6, list=FALSE)
 training <- dt_training[inTrain,]
@@ -36,13 +36,13 @@ dim(training); dim(testing);
 # decision tree model
 modFitDT <- rpart(classe ~ ., data = training, method="class")
 fancyRpartPlot(modFitDT)
-set.seed(12345)
+set.seed(88888)
 
 prediction <- predict(modFitDT, testing, type = "class")
 confusionMatrix(prediction, testing$class)
 
 # random forest model
-set.seed(12345)
+set.seed(88888)
 modFitRF <- randomForest(classe ~ ., data = training, ntree = 1000)
 
 predictionDT <- predict(modFitDT, dt_testing, type = "class")
