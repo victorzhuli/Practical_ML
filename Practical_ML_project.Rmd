@@ -1,0 +1,100 @@
+---
+title: "Practical_ML_project"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Background:
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement – a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website here: http://groupware.les.inf.puc-rio.br/har (see the section on the Weight Lifting Exercise Dataset).
+
+Objective:
+The goal of your project is to predict the manner in which they did the exercise. This is the "classe" variable in the training set. You may use any of the other variables to predict with. You should create a report describing how you built your model, how you used cross validation, what you think the expected out of sample error is, and why you made the choices you did. You will also use your prediction model to predict 20 different test cases.
+
+Data:
+The training data for this project are available here: https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv
+The test data are available here: https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv
+
+The data for this project come from this source: http://groupware.les.inf.puc-rio.br/har. If you use the document you create for this class for any purpose please cite them as they have been very generous in allowing their data to be used for this kind of assignment.
+
+```{r}
+library(caret)
+library(rpart)
+library(rpart.plot)
+library(RColorBrewer)
+library(rattle)
+library(randomForest)
+```
+Load the training dataset
+```{r}
+dt_training <- read.csv("/Users/lizhu/Documents/R_scripts/Practical_ML/pml-training.csv", na.strings=c("NA",""), strip.white=T)
+```
+Load the testing dataset
+```{r}
+dt_testing <- read.csv("/Users/lizhu/Documents/R_scripts/Practical_ML/pml-testing.csv", na.strings=c("NA",""), strip.white=T)
+```
+Clean the data: remove the columns containing NA and only use features used in testing cases.
+```{r}
+features <- names(dt_testing[,colSums(is.na(dt_testing)) == 0])[8:59]
+
+dt_training <- dt_training[,c(features,"classe")]
+dt_testing <- dt_testing[,c(features,"problem_id")]
+```
+Partitioning the Dataset: we want to estimate the out-of-sample error, so the data has to be partitioned. The training dataset contains 60% of the data, and the testing dataset contains 40% of the data.
+```{r}
+set.seed(88)
+inTrain <- createDataPartition(dt_training$classe, p=0.6, list=FALSE)
+training <- dt_training[inTrain,]
+testing <- dt_training[-inTrain,]
+dim(training); dim(testing);
+```
+
+Decision tree model: I don't expect high accuracy.
+```{r}
+modFitDT <- rpart(classe ~ ., data = training, method="class")
+fancyRpartPlot(modFitDT)
+
+```
+Prediction using decision tree
+```{r}
+set.seed(88)
+prediction <- predict(modFitDT, testing, type = "class")
+prediction
+confusionMatrix(prediction, testing$class)
+```
+
+Random forest model: I expect small out-of-sample error, which is estimated using the testing data.
+```{r}
+set.seed(88)
+modFitRF <- randomForest(classe ~ ., data = training, ntree = 1000)
+plot(modFitRF)
+```
+Prediction using random forest 
+```{r}
+set.seed(88)
+prediction <- predict(modFitRF, testing, type = "class")
+prediction
+confusionMatrix(prediction, testing$class)
+```
+
+PREDICTION
+[1] Decision tree
+```{r}
+predictionDT <- predict(modFitDT, dt_testing)
+predictionDT
+```
+[2] random forest
+```{r}
+predictionRF <- predict(modFitRF, dt_testing)
+predictionRF
+```
+
+Conclusion: it is shown that the confusion matrix of the result modeled by random forest is the most accurate. 
+
+
+
+
+
+
